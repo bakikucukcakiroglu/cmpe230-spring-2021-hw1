@@ -15,6 +15,27 @@ int while_opened = 0;
 int temp = 0;
 vector<string> all_variables;
 
+void print_module();
+void take_all_lines();
+bool is_number(const string& s);
+void paranthesis_count(string line, int line_count);
+void equal_sign_count(string line, int line_count);
+void white_space_eraser(string &line);
+void while_if_checker(string line, int line_count);
+void print_checker(string line, int line_count);
+void comment_eraser(string line);
+bool isValidVar(string var, int line_count);
+string assign_parser(string line, int line_count);
+string add_op(string line, int line_count);
+string sub_op(string line, int line_count);
+string mul_op(string line, int line_count);
+string div_op(string line,int line_count);
+string par_op(string line, int line_count);
+void parser(string line, int line_count);
+void syntax_checker(string line, int line_count);
+void is_it_all_good(string line, int line_count);
+
+
 void print_module()
 {
 	out_file_two << "; ModuleID = 'mylang2ir'" << endl;
@@ -83,7 +104,7 @@ void equal_sign_count(string line, int line_count)
 	}
 }
 
-void white_space_eraser(string &line)
+void white_space_eraser(string& line)
 {
 		string temp = "";
 		for (int k = 0; k < line.size(); k++)
@@ -132,7 +153,7 @@ void while_if_checker(string line, int line_count)
 void print_checker(string line, int line_count)
 {
 
-	if (line[5] = '(')
+	if (line[5] == '(')
 	{
 
 		if (line[line.size() - 1] != ')')
@@ -144,7 +165,7 @@ void print_checker(string line, int line_count)
 	}
 }
 
-void comment_eraser(string &line)
+void comment_eraser(string line)
 {
 		for (int i = 0; i < line.size(); i++)
 		{
@@ -159,10 +180,11 @@ void comment_eraser(string &line)
 bool isValidVar(string var, int line_count)
 {
 
-	if (var.size() == 0) {
+	if (var.size() == 0) 
+	{
 
-		return false;
-		//hata yazdırma
+		out_file << "Line " << line_count << ": syntax error.";
+		exit(0);
 	}
 	if (isalpha(var[0]) == 0)
 	{
@@ -178,6 +200,8 @@ bool isValidVar(string var, int line_count)
 			exit(0);
 		}
 	}
+
+	return true;
 }
 
 string assign_parser(string line, int line_count)
@@ -206,11 +230,16 @@ string assign_parser(string line, int line_count)
 	string exp = line.substr(eq_index + 1, line.size());
 	sub_op(exp,line_count);
 	out_file << "\t" << "store i32 %!" << temp << ", i32* %"<< variable << endl;
+	
 	temp++;
 
+	string a= "%!"+to_string(temp-1);
+
+	return a;
 }
 
-string add_op(string line, int line_count) {
+string add_op(string line, int line_count) 
+{
 
 	int op_index = -1;
 	int par = 0;
@@ -223,7 +252,7 @@ string add_op(string line, int line_count) {
 			par--;
 		}
 
-		if (par = 0 && line[i] == '+') {
+		if (par == 0 && line[i] == '+') {
 
 			op_index = i;
 
@@ -236,7 +265,7 @@ string add_op(string line, int line_count) {
 		string left = add_op(line.substr(0, op_index), line_count);
 
 		//write to file
-		string a = "%!" + temp;
+		string a = "%!" + to_string(temp);
 		out_file << "\t" << "%!" << temp << " = add i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
@@ -248,7 +277,8 @@ string add_op(string line, int line_count) {
 
 }
 
-string sub_op(string line, int line_count) {
+string sub_op(string line, int line_count) 
+{
 
 	int op_index = -1;
 	int par = 0;
@@ -261,7 +291,7 @@ string sub_op(string line, int line_count) {
 			par--;
 		}
 
-		if (par = 0 && line[i] == '-') {
+		if (par == 0 && line[i] == '-') {
 
 			op_index = i;
 
@@ -273,7 +303,7 @@ string sub_op(string line, int line_count) {
 		string right = sub_op(line.substr(op_index + 1, line.size()), line_count);
 		string left = sub_op(line.substr(0, op_index), line_count);
 
-		string a="%!" + temp;
+		string a="%!" + to_string(temp);
 		out_file << "\t" << "%!" << temp << " = sub i32 "<< left<< ", " << right << endl;
 		temp++;
 		return a;
@@ -284,11 +314,13 @@ string sub_op(string line, int line_count) {
 	}
 }
 
-string mul_op(string line, int line_count) {
+string mul_op(string line, int line_count) 
+{
 
 	int op_index = -1;
 	int par = 0;
-	for (int i = line.size() - 1; i >= 0; i--) {
+	for (int i = line.size() - 1; i >= 0; i--) 
+	{
 
 		if (line[i] == '(') {
 			par++;
@@ -297,7 +329,7 @@ string mul_op(string line, int line_count) {
 			par--;
 		}
 
-		if (par = 0 && line[i] == '*') {
+		if (par == 0 && line[i] == '*') {
 
 			op_index = i;
 
@@ -309,7 +341,7 @@ string mul_op(string line, int line_count) {
 		string right = mul_op(line.substr(op_index + 1, line.size()), line_count);
 		string left = mul_op(line.substr(0, op_index), line_count);
 
-		string a = "%!" + temp;
+		string a = "%!" + to_string(temp);
 		out_file << "\t" << "%!" << temp << " = mul i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
@@ -323,11 +355,13 @@ string mul_op(string line, int line_count) {
 
 }
 
-string div_op(string line,int line_count) {
+string div_op(string line,int line_count) 
+{
 
 	int op_index = -1;
 	int par = 0;
-	for (int i = line.size() - 1; i >= 0; i--) {
+	for (int i = line.size() - 1; i >= 0; i--) 
+	{
 
 		if (line[i] == '(') {
 			par++;
@@ -336,7 +370,8 @@ string div_op(string line,int line_count) {
 			par--;
 		}
 
-		if (par = 0 && line[i] == '/') {
+		if (par == 0 && line[i] == '/') 
+		{
 
 			op_index = i;
 
@@ -348,7 +383,7 @@ string div_op(string line,int line_count) {
 		string right = div_op(line.substr(op_index + 1, line.size()), line_count);
 		string left = div_op(line.substr(0, op_index),line_count);
 
-		string a = "%!" + temp;
+		string a = "%!" + to_string(temp);
 		out_file << "\t" << "%!" << temp << " = sdiv i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
@@ -363,9 +398,11 @@ string div_op(string line,int line_count) {
 
 }
 
-string par_op(string line, int line_count) {
+string par_op(string line, int line_count) 
+{
 
-	if (line[0] == '(' && line[line.size() == ')']) {
+	if (line[0] == '(' && line[line.size() == ')']) 
+	{
 
 		sub_op(line.substr(1, line.size()), line_count);
 	}
@@ -404,6 +441,8 @@ string par_op(string line, int line_count) {
 
 	}
 
+	return line; //!!!!
+
 
 }
 
@@ -412,6 +451,7 @@ void parser(string line, int line_count)
 
 	if (line.find('=') != string::npos)
 	{
+		cout<< "girdim 454"<<endl;
 		assign_parser(line,line_count);
 	}
 	else if (line.substr(0, 6) == "while(")
@@ -443,7 +483,7 @@ void parser(string line, int line_count)
 		out_file << "whbody :" << endl;
 	}
 
-	else if (line.substr(0.6) == "print(")
+	else if (line.substr(0, 6) == "print(")
 	{
 
 		string tempp = line.substr(6, line.size() - 1);
@@ -481,7 +521,6 @@ void parser(string line, int line_count)
 
 void syntax_checker(string line, int line_count)
 {
-	int line_count = 1;
 	is_it_all_good(line, line_count);
 	paranthesis_count(line, line_count);
 	equal_sign_count(line, line_count);
@@ -512,22 +551,33 @@ void is_it_all_good(string line, int line_count)
 
 int main(int argc, char* argv[])
 {
-	//string file_name = argv[1];
-	in_file.open("Input.txt");
+	cout<<"başladık"<<endl;
+	string file_name = argv[1];
+	in_file.open(file_name);
 	out_file.open("file.txt");
-	out_file_two.open("file.ll");
+	out_file_two.open("file1.txt");
 	in_file_two.open("file.txt");
 
 	print_module();
 	take_all_lines();
-	int i = 0;
+	int i = 1;
 	
 	while (i < all_lines.size()) 
 	{
+		
 		white_space_eraser(all_lines[i]);
-		comment_eraser(all_lines[i]);
+		
+		for(int i=0; i<all_lines.size();i++){
+
+			cout<<all_lines[i]<<endl;
+		}
+		line= all_lines[i];
+		comment_eraser(line);
 		syntax_checker(all_lines[i], i);
+		cout<<"line "<<i<< " syntax checkerı geçti"<<endl;
 		parser(all_lines[i], i);
+		cout<<"line "<<i<< " parserı geçti"<<endl;
+		i++;
 	}
 
 	for (int i = 0; i < all_variables.size(); i++)
