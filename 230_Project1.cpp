@@ -32,7 +32,12 @@ void take_all_lines()
 		all_lines.push_back(line);
 	}
 }
-
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
 void paranthesis_count(string line, int line_count)
 {
 
@@ -163,7 +168,12 @@ void comment_eraser()
 bool isValidVar(string var, int line_count)
 {
 
-	if (var[0] != '_' || isAlpha(var[0]) == 0)
+	if(line.size()==0){
+
+		return false;
+		//hata yazdırma
+	}
+	if (isAlpha(var[0]) == 0)
 	{
 
 		out_file << "Line " << line_count << ": syntax error.";
@@ -204,9 +214,186 @@ string assign_parser(string line, int line_count)
 	expr_parser(exp);
 
 }
+
+string add_op(string line){
+
+	int op_index=-1;
+	int par=0;
+	for(int i=line.size()-1; i>=0;i-- ){
+
+		if(line[i]=='('){
+			par++;
+		}
+		if(line[i]==')'){
+			par--;
+		}
+
+		if(par=0 && line[i]=='+'){
+
+			op_index=i;		
+			
+		}
+	}
+
+	if(op_index!=-1){
+
+		string right= add_op(line.substr(op_index+1, line.size()));
+		string left= add_op(line.substr(0, op_index));
+
+		//write to file
+	
+	}else{
+
+		return mul_op(line);
+	}
+
+}
+string sub_op(string line){
+
+	int op_index=-1;
+	int par=0;
+	for(int i=line.size()-1; i>=0;i-- ){
+
+		if(line[i]=='('){
+			par++;
+		}
+		if(line[i]==')'){
+			par--;
+		}
+
+		if(par=0 && line[i]=='-'){
+
+			op_index=i;		
+			
+		}
+	}
+
+	if(op_index!=-1){
+
+		string right= sub_op(line.substr(op_index+1, line.size()));
+		string left= sub_op(line.substr(0, op_index));
+
+		//write to file
+	
+	}else{
+
+		return add_op(line);
+	}
+}
+string mul_op(string line){
+
+	int op_index=-1;
+		int par=0;
+		for(int i=line.size()-1; i>=0;i-- ){
+
+			if(line[i]=='('){
+				par++;
+			}
+			if(line[i]==')'){
+				par--;
+			}
+
+			if(par=0 && line[i]=='*'){
+
+				op_index=i;		
+				
+			}
+		}
+
+		if(op_index!=-1){
+
+			string right= mul_op(line.substr(op_index+1, line.size()));
+			string left= mul_op(line.substr(0, op_index));
+
+			//write to file
+		
+		}else{
+
+			return div_op(line);
+		}
+
+}
+string div_op(string line){
+
+	int op_index=-1;
+	int par=0;
+	for(int i=line.size()-1; i>=0;i-- ){
+
+		if(line[i]=='('){
+			par++;
+		}
+		if(line[i]==')'){
+			par--;
+		}
+
+		if(par=0 && line[i]=='/'){
+
+			op_index=i;		
+			
+		}
+	}
+
+	if(op_index!=-1){
+
+		string right= div_op(line.substr(op_index+1, line.size()));
+		string left= div_op(line.substr(0, op_index));
+
+		//write to file
+	
+	}else{
+
+		return par_op(line);
+	}
+
+
+}
+string par_op(string line){
+
+	if(line[0]=='('&& line[line.size()==')']){
+
+		sub_op(line.substr(1, line.size());
+	}else{
+
+		if(isValidVar(line)){
+
+			bool isRegistered=false;
+
+			for(int i=0; i< all_variables.size(); i++){
+
+				if(all_variables[i]==line){
+
+					isRegistered=true;
+				}
+			}
+			if(!isRegistered){
+
+				all_variables.push_back(line);
+			}
+
+			return line;
+
+		}else if(isNumber(line)){
+
+			return line;
+			
+			
+		}else{
+
+			//syntax_line
+			//hata mesajı
+		}
+
+	}
+
+
+}
+
 string expr_parser(string exp, int line_count)
 {
+
+
 }
+
 
 void parser(string line, int line_count)
 {
