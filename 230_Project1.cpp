@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 #include <vector>
 using namespace std;
 
@@ -11,6 +12,7 @@ ofstream out_file;
 ofstream out_file_two;
 
 int syntax_line = -1;
+int line_count = 1;
 int while_opened = 0;
 int temp = 1;
 vector<string> all_variables;
@@ -18,28 +20,28 @@ vector<string> all_variables;
 void print_module();
 void take_all_lines();
 bool is_number(string s);
-void paranthesis_count(string line, int line_count);
-void equal_sign_count(string line, int line_count);
-void white_space_eraser(string line);
-void while_if_checker(string line, int line_count);
-void print_checker(string line, int line_count);
-void comment_eraser(string line);
-bool isValidVar(string var, int line_count);
-string assign_parser(string line, int line_count);
-string add_op(string line, int line_count);
-string sub_op(string line, int line_count);
-string mul_op(string line, int line_count);
-string div_op(string line,int line_count);
-string par_op(string line, int line_count);
-void parser(string line, int line_count);
-void syntax_checker(string line, int line_count);
-void is_it_all_good(string line, int line_count);
+void paranthesis_count(int i);
+void equal_sign_count(int i);
+void white_space_eraser(int i); // DUZELT
+void while_if_checker(int i);
+void print_checker(int i);
+void comment_eraser(int i); // DUZELT
+bool isValidVar(string var);
+string assign_parser(string line);
+string add_op(string line);
+string sub_op(string line);
+string mul_op(string line);
+string div_op(string line);
+string par_op(string line);
+void parser(string line);
+void syntax_checker(int i);
+void is_it_all_good(int i);
 
 
 void print_module()
 {
 	out_file_two << "; ModuleID = 'mylang2ir'" << endl;
-	out_file_two << "declare i32 @printf(i*8, ...)" << endl;
+	out_file_two << "declare i32 @printf(i8*, ...)" << endl; // declare i32 @printf(i8*, ...)
 	out_file_two << "@print.str = constant [4 x i8] c\"%d\\0A\\00\"" << endl;
 	out_file_two << endl;
 	out_file_two << "define i32 @main() {" << endl;
@@ -69,11 +71,11 @@ bool is_number(string s)
 	return true;
 }
 
-void paranthesis_count(string line, int line_count)
+void paranthesis_count(int i)
 {
 
 	int open = 0;
-
+    string line = all_lines[i];
 	for (int i = 0; i < line.size(); i++)
 	{
 		if (line[i] == '(')
@@ -94,9 +96,10 @@ void paranthesis_count(string line, int line_count)
 	open = 0;
 }
 
-void equal_sign_count(string line, int line_count)
+void equal_sign_count(int i)
 {
 	int open = 0;
+    string line = all_lines[i];
 	for (int k = 0; k < line.size(); k++)
 	{
 		if (line[k] == '=')
@@ -111,8 +114,9 @@ void equal_sign_count(string line, int line_count)
 	}
 }
 
-void white_space_eraser(string line, int i)
+void white_space_eraser(int i)
 {
+        string line = all_lines[i];
 		string temp = "";
 		for (int k = 0; k < line.size(); k++)
 		{
@@ -124,9 +128,9 @@ void white_space_eraser(string line, int i)
 		all_lines[i] = temp;
 }
 
-void while_if_checker(string line, int line_count)
+void while_if_checker(int i)
 {
-
+    string line = all_lines[i];
 	if (line.substr(0, 5) == "while")
 	{
 		if (line[5] == '(')
@@ -157,9 +161,9 @@ void while_if_checker(string line, int line_count)
 	}
 }
 
-void print_checker(string line, int line_count)
+void print_checker(int i)
 {
-
+    string line = all_lines[i];
 	if (line[5] == '(')
 	{
 
@@ -172,24 +176,25 @@ void print_checker(string line, int line_count)
 	}
 }
 
-void comment_eraser(string line)
+void comment_eraser(int i)
 {
+        string line = all_lines[i];
 		for (int i = 0; i < line.size(); i++)
 		{
 			if (line[i] ==	'#')
-			{
-				i = line.size();
-				line = line.substr(0, i);
+            {
+				line = line.substr(0,i);
 			}
 		}
+		all_lines[i] = line;
+
 }
 
-bool isValidVar(string var, int line_count)
+bool isValidVar(string var)
 {
 
 	if (var.size() == 0) 
 	{
-
 		out_file << "Line " << line_count << ": syntax error.";
 		exit(0);
 	}
@@ -211,7 +216,7 @@ bool isValidVar(string var, int line_count)
 	return true;
 }
 
-string assign_parser(string line, int line_count)
+string assign_parser(string line)
 {
 
 	int eq_index = line.find('=');
@@ -221,15 +226,12 @@ string assign_parser(string line, int line_count)
 
 	std::vector<string>::iterator it;
 
-	if (isValidVar(variable,line_count)) {
-
-		cout<<"ifi geçtim"<<endl;
+	if (isValidVar(variable)) {
 
 		it = find(all_variables.begin(), all_variables.end(), variable);
 
-		if (it == all_variables.end()) {
-			cout<<"variable eklendi"<<endl;
-
+		if (it == all_variables.end())
+        {
 			all_variables.push_back(variable);
 		}
 	}
@@ -240,19 +242,17 @@ string assign_parser(string line, int line_count)
 
 	string exp = line.substr(eq_index + 1, line.size());
 
-	cout<<"exp"<<exp<<endl;
-
-	string b= sub_op(exp,line_count);
+	string b= sub_op(exp);
 	if(is_number(b)){
 
 		out_file << "\t" << "store i32 " << b << ", i32* %"<< variable << endl;
 	
 	}else if(b[0]!='%'){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << b<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << b<< endl;
 		temp++;
 
-		out_file << "\t" << "store i32 %!" << temp-1 << ", i32* %"<< variable << endl;
+		out_file << "\t" << "store i32 %_" << temp-1 << ", i32* %"<< variable << endl;
 		
 	
 		
@@ -264,12 +264,12 @@ string assign_parser(string line, int line_count)
 
 	}
 
-	string a= "%!"+to_string(temp-1);
+	string a= "%_"+to_string(temp-1);
 
 	return a;
 }
 
-string add_op(string line, int line_count) 
+string add_op(string line)
 {
 
 	int op_index = -1;
@@ -292,39 +292,39 @@ string add_op(string line, int line_count)
 
 	if (op_index != -1) {
 
-		string right = add_op(line.substr(op_index + 1, line.size()), line_count);
-		string left = add_op(line.substr(0, op_index), line_count);
+		string right = add_op(line.substr(op_index + 1, line.size()));
+		string left = add_op(line.substr(0, op_index));
 
 		if(!is_number(left)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << left<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << left<< endl;
 		
-		left= "%!"+to_string(temp);
+		left= "%_"+to_string(temp);
 	
 		temp++;
 		}
 				
 		if(!is_number(right)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << right<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << right<< endl;
 		
-		right= "%!"+to_string(temp);
+		right= "%_"+to_string(temp);
 
 		temp++;
 		}
-		string a= "%!"+to_string(temp);
-		out_file << "\t" << "%!" << temp << " = add i32 " << left << ", " << right << endl;
+		string a= "%_"+to_string(temp);
+		out_file << "\t" << "%_" << temp << " = add i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
 	}
 	else {
 
-		return mul_op(line, line_count);
+		return mul_op(line);
 	}
 
 }
 
-string sub_op(string line, int line_count) 
+string sub_op(string line)
 {
 
 	int op_index = -1;
@@ -347,38 +347,37 @@ string sub_op(string line, int line_count)
 
 	if (op_index != -1) {
 
-		string right = sub_op(line.substr(op_index + 1, line.size()), line_count);
-		string left = sub_op(line.substr(0, op_index), line_count);
+		string right = sub_op(line.substr(op_index + 1, line.size()));
+		string left = sub_op(line.substr(0, op_index));
 
 		if(!is_number(left)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << left<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << left<< endl;
 		
-		left= "%!"+to_string(temp);
+		left = "%_" + to_string(temp);
 	
 		temp++;
 		}
 				
 		if(!is_number(right)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << right<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << right<< endl;
 		
-		right= "%!"+to_string(temp);
+		right = "%_" + to_string(temp);
 
 		temp++;
 		}
-		string a= "%!"+to_string(temp);
-		out_file << "\t" << "%!" << temp << " = sub i32 " << left << ", " << right << endl;
+		string a = "%_" + to_string(temp);
+		out_file << "\t" << "%_" << temp << " = sub i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
 	}
-	else {
-		cout<<"adda return agam"<<endl;
-		return add_op(line, line_count);
+	else{
+		return add_op(line);
 	}
 }
 
-string mul_op(string line, int line_count) 
+string mul_op(string line)
 {
 
 	int op_index = -1;
@@ -402,40 +401,40 @@ string mul_op(string line, int line_count)
 
 	if (op_index != -1) {
 
-		string right = mul_op(line.substr(op_index + 1, line.size()), line_count);
-		string left = mul_op(line.substr(0, op_index), line_count);
+		string right = mul_op(line.substr(op_index + 1, line.size()));
+		string left = mul_op(line.substr(0, op_index));
 
 		if(!is_number(left)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << left<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << left<< endl;
 		
-		left= "%!"+to_string(temp);
+		left= "%_"+to_string(temp);
 	
 		temp++;
 		}
 				
 		if(!is_number(right)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << right<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << right<< endl;
 		
-		right= "%!"+to_string(temp);
+		right= "%_"+to_string(temp);
 
 		temp++;
 		}
-		string a= "%!"+to_string(temp);
-		out_file << "\t" << "%!" << temp << " = mul i32 " << left << ", " << right << endl;
+		string a= "%_"+to_string(temp);
+		out_file << "\t" << "%_" << temp << " = mul i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
 
 	}
 	else {
 
-		return div_op(line, line_count);
+		return div_op(line);
 	}
 
 }
 
-string div_op(string line,int line_count) 
+string div_op(string line)
 {
 
 	int op_index = -1;
@@ -460,62 +459,56 @@ string div_op(string line,int line_count)
 
 	if (op_index != -1) {
 
-		string right = div_op(line.substr(op_index + 1, line.size()), line_count);
-		string left = div_op(line.substr(0, op_index),line_count);
+		string right = div_op(line.substr(op_index + 1, line.size()));
+		string left = div_op(line.substr(0, op_index));
 
 		if(!is_number(left)){
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << left<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << left<< endl;
 		
-		left= "%!"+to_string(temp);
+		left= "%_"+to_string(temp);
 	
 		temp++;
 		}
 				
 		if(!is_number(right)){ // 3+(n+y) gibi bir durumda n+y %! olarak dönecek ve 3+%!   3+%%! olacak
 
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << right<< endl;
+		out_file << "\t" <<"%_"<< temp << "= load i32* %" << right<< endl;
 		
-		right= "%!"+to_string(temp);
+		right= "%_"+to_string(temp);
 
 		temp++;
 		}
-		string a= "%!"+to_string(temp);
-		out_file << "\t" << "%!" << temp << " = sdiv i32 " << left << ", " << right << endl;
+		string a= "%_"+to_string(temp);
+		out_file << "\t" << "%_" << temp << " = sdiv i32 " << left << ", " << right << endl;
 		temp++;
 		return a;
 	}
 	else {
-		cout<<"para gidiyom agam"<<endl;
-		return par_op(line,line_count);
+
+		return par_op(line);
 	}
 
 
 }
 
-string par_op(string line, int line_count) 
+string par_op(string line)
 {
 
 	if (line[0] == '(' && line[line.size() == ')']) 
 	{
-		cout<<"ananı siktim"<<endl;
 
-		sub_op(line.substr(1, line.size()), line_count);
+
+		sub_op(line.substr(1, line.size()));
 	}
 	else {
 
-		cout<<"434"<<endl;
-		cout<<line<<endl;
-
 		if (is_number(line)) {
 
-			cout<<"sayıyım agam"<<endl;
 			return line;
-
 		}
-		else if (isValidVar(line,line_count)) {
-			
-			cout<< "validim" <<endl;
+		else if (isValidVar(line)) {
+
 			bool isRegistered = false;
 
 			for (int i = 0; i < all_variables.size(); i++) {
@@ -531,75 +524,76 @@ string par_op(string line, int line_count)
 			}
 
 			return line;
-
-
 		}
 		else {
-
-			cout<< "ananın amına gir"<<endl;
-			
 			out_file << "Line " << line_count << ": syntax error.";
 			exit(0);
 		}
 
 	}
-
-
-
 	return line; //!!!!
-
-
 }
 
-void parser(string line, int line_count)
+void parser(string line)
 {
 
 	if (line.find('=') != string::npos)
 	{
-		cout<< "girdim 454"<<endl;
-		assign_parser(line,line_count);
+		assign_parser(line);
 	}
 	else if (line.substr(0, 6) == "while(")
 	{
+	    /*
+	     * string right = sub_op(line.substr(op_index + 1, line.size()));
+		string left = sub_op(line.substr(0, op_index));
+
+
+	    */
 		while_opened++;
 		int length= line.length();
 		string tempp = line.substr(6, length-8);
-		cout<<"whilin conditionu: "<<tempp<<endl;
-		out_file << "\t" <<"br label% whcond" << endl << endl;
-		out_file << "whcond :" << endl;
-		
-		out_file << "\t" <<"%! "<< temp << "= load i32 * %" << sub_op(tempp, line_count)<< endl;
+
+		out_file << "\t" <<"br label %whcond" << endl << endl;
+		out_file << "whcond:" << endl;
+		string tried =  sub_op(tempp);
+
+		out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
 		temp++;
-		out_file << "\t" << "%!" << temp <<"= icmp ne i32 % !"<< temp-1<<", 0 "<< endl;
-		temp++;
-		out_file << "\t" << "br i1 %!"<<temp-1 <<", label% whbody, label% whend" << endl << endl;
-		out_file << "whbody :" << endl;
+		out_file << "\t" << "br i1 %_"<< temp-1 <<", label %whbody, label %whend" << endl << endl;
+		out_file << "whbody:" << endl;
 	}
 	else if (line.substr(0, 4) == "if(")
 	{
 		string tempp = line.substr(3, line.length()-5);
-		out_file << "\t" << "br label% whcond" << endl << endl;
-		out_file << "whcond :" << endl;
+
+		out_file << "\t" << "br label %whcond" << endl << endl;
+		out_file << "whcond:" << endl;
+        string tried = sub_op(tempp);
+        /*if(!is_number(tried)){
+            out_file << "\t" <<"%_"<< temp << "= load i32* " << tried<< endl;
+            tried = "%_" + to_string(temp);
+            temp++;
+        }*/
 
 
-		out_file << "\t" << "%! " << temp << "= load i32 * %" << sub_op(tempp, line_count) << endl;
+		out_file << "\t" << "%_" << temp << "= icmp ne i32 %_" << tried << ", 0 " << endl;
 		temp++;
-		out_file << "\t" << "%!" << temp << "= icmp ne i32 % !" << temp - 1 << ", 0 " << endl;
-		temp++;
-		out_file << "\t" << "br i1 %!" << temp - 1 << ", label% whbody, label% whend" << endl << endl;
-		out_file << "whbody :" << endl;
+		out_file << "\t" << "br i1 %_" << temp - 1 << ", label %whbody, label %whend" << endl << endl;
+		out_file << "whbody:" << endl;
 	}
 
 	else if (line.substr(0, 6) == "print(")
 	{
-
 		string tempp = line.substr(6, line.length() - 7);
+		string tried = sub_op(tempp);
+        if(!is_number(tried)){
+            out_file << "\t" <<"%_"<< temp << "= load i32* " << tried<< endl;
+            tried = "%_" + to_string(temp);
+            temp++;
+        }
 
-		par_op(tempp, line_count);
-		
-		out_file << "\t" << "%!" <<temp <<"= load i32 *" << "%" <<tempp <<endl;
 		temp++;
-		out_file << "\t" << "call i32(i8, ...) @printf(i8 * getelementptr([4 x i8] * @print.str, i32 0, i32 0), i32 % t7)" << endl;
+		out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< tried << ")" << endl;
 	}
 
 	else if (line[0] == '}')
@@ -626,25 +620,27 @@ void parser(string line, int line_count)
 	}
 }
 
-void syntax_checker(string line, int line_count)
+void syntax_checker(int i)
 {
-	is_it_all_good(line, line_count);
-	paranthesis_count(line, line_count);
-	equal_sign_count(line, line_count);
+    string line = all_lines[i];
+	is_it_all_good(i);
+	paranthesis_count(i);
+	equal_sign_count(i);
 
 		if (line.substr(0, 5) == "while" || line.substr(0, 3) == "if")
 		{
-			while_if_checker(line, line_count);
+			while_if_checker(i);
 		}
 		if (line.substr(0, 5) == "print")
 		{
-			print_checker(line, line_count);
+			print_checker(i);
 		}
-	line_count++;
+
 }
 
-void is_it_all_good(string line, int line_count)
+void is_it_all_good(int i)
 {
+    string line = all_lines[i];
 	for (int i = 0; i < line.size(); i++)
 	{
 		if (!(isalpha(line[i]) || isdigit(line[i]) || line[i] == '{' || line[i] == '}' || line[i] == '(' || line[i] == ')' || line[i] == '=' || line[i] == ',' || line[i] == '+'
@@ -662,7 +658,7 @@ int main(int argc, char* argv[])
 	string file_name = argv[1];
 	in_file.open(file_name);
 	out_file.open("file.txt");
-	out_file_two.open("file1.txt");
+	out_file_two.open("file1.ll");
 	in_file_two.open("file.txt");
 
 	print_module();
@@ -672,16 +668,17 @@ int main(int argc, char* argv[])
 	while (i < all_lines.size()) 
 	{
 		
-		white_space_eraser(all_lines[i], i);
-		
+		white_space_eraser(i);// DUZELT
 		cout<<all_lines[i]<<endl;
 		string line= all_lines[i];
-		comment_eraser(line);
-		syntax_checker(all_lines[i], i);
-		cout<<"line "<<i+1<< " syntax checkerı geçti"<<endl;
-		parser(all_lines[i], i);
-		cout<<"line "<<i+1<< " parserı geçti"<<endl;
+		comment_eraser(i);
+		cout << "OUR LINES:" <<all_lines[i] << endl;
+		syntax_checker(i); // DUZELT
+		cout<<"line "<<line_count<< " syntax checkerı geçti"<<endl;
+		parser(all_lines[i]); // DUZELT
+		cout<<"line "<<line_count<< " parserı geçti"<<endl;
 		i++;
+		line_count++;
 	}
 
 	for (int i = 0; i < all_variables.size(); i++)
@@ -693,7 +690,7 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < all_variables.size(); i++)
 	{
-		out_file_two << "store i32 0, i32*%" << all_variables[i] << endl;
+		out_file_two << "store i32 0, i32* %" << all_variables[i] << endl;
 	}
 
 	out_file_two << endl;

@@ -1,0 +1,14 @@
+# xdxdxd
+n = 10 # abababa
+f0 = 0
+f1 = 1
+i = 2
+
+while(n+3){
+t = f1
+f1 = f0 +f1
+f0 = t
+print(f1)
+n = n - 1
+}
+
