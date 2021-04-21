@@ -543,12 +543,6 @@ void parser(string line)
 	}
 	else if (line.substr(0, 6) == "while(")
 	{
-	    /*
-	     * string right = sub_op(line.substr(op_index + 1, line.size()));
-		string left = sub_op(line.substr(0, op_index));
-
-
-	    */
 		while_opened++;
 		int length= line.length();
 		string tempp = line.substr(6, length-8);
@@ -556,6 +550,11 @@ void parser(string line)
 		out_file << "\t" <<"br label %whcond" << endl << endl;
 		out_file << "whcond:" << endl;
 		string tried =  sub_op(tempp);
+
+		if(tried[0]!='%')
+        {
+		    tried = "%" + tried;
+        }
 
 		out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
 		temp++;
@@ -569,14 +568,13 @@ void parser(string line)
 		out_file << "\t" << "br label %whcond" << endl << endl;
 		out_file << "whcond:" << endl;
         string tried = sub_op(tempp);
-        /*if(!is_number(tried)){
-            out_file << "\t" <<"%_"<< temp << "= load i32* " << tried<< endl;
-            tried = "%_" + to_string(temp);
-            temp++;
-        }*/
+        if(tried[0]!='%')
+        {
+            tried = "%" + tried;
+        }
 
 
-		out_file << "\t" << "%_" << temp << "= icmp ne i32 %_" << tried << ", 0 " << endl;
+		out_file << "\t" << "%_" << temp << "= icmp ne i32 " << tried << ", 0 " << endl;
 		temp++;
 		out_file << "\t" << "br i1 %_" << temp - 1 << ", label %whbody, label %whend" << endl << endl;
 		out_file << "whbody:" << endl;
@@ -586,14 +584,14 @@ void parser(string line)
 	{
 		string tempp = line.substr(6, line.length() - 7);
 		string tried = sub_op(tempp);
-        if(!is_number(tried)){
-            out_file << "\t" <<"%_"<< temp << "= load i32* " << tried<< endl;
-            tried = "%_" + to_string(temp);
-            temp++;
+        if(tried[0]!='%')
+        {
+            tried = "%" + tried;
         }
+		out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
 
 		temp++;
-		out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< tried << ")" << endl;
+		out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< "%_" << temp-1 << ")" << endl;
 	}
 
 	else if (line[0] == '}')
@@ -654,7 +652,7 @@ void is_it_all_good(int i)
 
 int main(int argc, char* argv[])
 {
-	cout<<"başladık"<<endl;
+
 	string file_name = argv[1];
 	in_file.open(file_name);
 	out_file.open("file.txt");
