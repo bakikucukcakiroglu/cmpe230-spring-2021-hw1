@@ -14,6 +14,8 @@ ofstream out_file_two;
 int syntax_line = -1;
 int line_count = 1;
 int while_opened = 0;
+int if_opened=0;
+int conditioner= 1;
 int temp = 1;
 vector<string> all_variables;
 
@@ -259,7 +261,7 @@ string assign_parser(string line)
 	}else if(b[0]=='%'){
 
 
-		out_file << "\t" << "store i32"<< b << ", i32* %"<< variable << endl;
+		out_file << "\t" << "store i32 "<< b << ", i32* %"<< variable << endl;
 		
 
 	}
@@ -544,68 +546,177 @@ void parser(string line)
 	else if (line.substr(0, 6) == "while(")
 	{
 		while_opened++;
+
+		if(if_opened!=0||while_opened!=1){
+
+			out_file << "Line " << line_count << ": syntax error.";
+		 	exit(0);
+		}
 		int length= line.length();
 		string tempp = line.substr(6, length-8);
 
-		out_file << "\t" <<"br label %whcond" << endl << endl;
-		out_file << "whcond:" << endl;
+		out_file << "\t" <<"br label %whcond"<<conditioner << endl << endl;
+		out_file << "whcond"<<conditioner<<":" << endl;
 		string tried =  sub_op(tempp);
 
-		if(tried[0]!='%')
+	
+        if(!is_number(tried))
         {
-		    tried = "%" + tried;
-        }
+            if(tried[0]!='%'){
 
-		out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
-		temp++;
-		out_file << "\t" << "br i1 %_"<< temp-1 <<", label %whbody, label %whend" << endl << endl;
-		out_file << "whbody:" << endl;
-	}
-	else if (line.substr(0, 4) == "if(")
-	{
-		string tempp = line.substr(3, line.length()-5);
-
-		out_file << "\t" << "br label %whcond" << endl << endl;
-		out_file << "whcond:" << endl;
-        string tried = sub_op(tempp);
-        if(tried[0]!='%')
-        {
             tried = "%" + tried;
+            out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+            temp++;
+            out_file << "\t" << "%_" << temp <<"= icmp ne i32 %_"<< temp-1<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %whbody"<<conditioner<<", label %whend"<<conditioner << endl << endl;
+
+			out_file << "whbody"<<conditioner<<":" << endl;
+       		}else{
+
+			out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %whbody"<<conditioner<<", label %whend"<<conditioner << endl << endl;
+
+			out_file << "whbody"<<conditioner<<":" << endl;
+
+
+       		}
+	
+
+        
+        }else{
+
+        	out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %whbody"<<conditioner<<", label %whend"<<conditioner << endl << endl;
+			out_file << "whbody"<<conditioner<<":" << endl;
+
+
         }
 
+		
+	}
+	else if (line.substr(0, 3) == "if(")
+	{
+		if_opened++;
+		if(if_opened!=1||while_opened!=0){
 
-		out_file << "\t" << "%_" << temp << "= icmp ne i32 " << tried << ", 0 " << endl;
-		temp++;
-		out_file << "\t" << "br i1 %_" << temp - 1 << ", label %whbody, label %whend" << endl << endl;
-		out_file << "whbody:" << endl;
+			out_file << "Line " << line_count << ": syntax error.";
+		 	exit(0);
+		}
+		string tempp = line.substr(3, line.length()-5);
+		cout<<"ife bu girdi"<<tempp<<endl;
+
+		out_file << "\t" << "br label %"<<"entry"<<conditioner << endl << endl;
+		out_file << "entry"<<conditioner<<":" << endl;
+        string tried = sub_op(tempp);
+   
+        if(!is_number(tried))
+        {
+            if(tried[0]!='%'){
+
+            tried = "%" + tried;
+            out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+            temp++;
+            out_file << "\t" << "%_" << temp <<"= icmp ne i32 %_"<< temp-1<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %btrue"<<conditioner<<", label %"<<"end"<<conditioner << endl << endl;
+
+			out_file << "btrue"<<conditioner<<":" << endl;
+       		}else{
+
+			out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %btrue"<<conditioner<<", label %"<<"end"<<conditioner << endl << endl;
+
+			out_file << "btrue"<<conditioner<<":" << endl;
+
+
+       		}
+	
+
+        
+        }else{
+
+        	out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %btrue"<<conditioner<<", label %"<<"end"<<conditioner << endl << endl;
+			out_file << "btrue"<<conditioner<<":" << endl;
+
+
+        }
+
 	}
 
 	else if (line.substr(0, 6) == "print(")
 	{
 		string tempp = line.substr(6, line.length() - 7);
 		string tried = sub_op(tempp);
-        if(tried[0]!='%')
-        {
-            tried = "%" + tried;
-        }
-		out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
 
-		temp++;
-		out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< "%_" << temp-1 << ")" << endl;
+		cout<<"PRİNTE BU GİRDİ "<<tempp<<endl;
+        
+        if(!is_number(tried))
+        {
+            if(tried[0]!='%'){
+
+            tried = "%" + tried;
+            out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+
+			temp++;
+			out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 %_"<< temp-1<< ")" << endl;
+       		}else{
+
+			out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< tried<< ")" << endl; // temp-1 i tried yaptım
+
+       		}
+        
+        }else{
+
+        	//out_file << "\t" << "%_" << temp << "= load i32* << << endl;
+
+
+        	// out_file<< "\t"<< "store i32 "<< tried<<", i32* %_"<< temp<<endl; 	// bu işleme dikkat et ve diğer operasynlar için de değerlendir . direkt sayıyı load edemiyoruz ve pirinte sokamıyoruz o yüzden önce yüklememiz gerekli
+        	
+        	// tried= "%_"+ to_string(temp);
+        	// temp++;
+
+			out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< tried<< ")" << endl; // temp-1 i tried yaptım
+
+
+        }
+
+		
+		// out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+
+		// temp++;
+		// out_file << "\t" << "call i32(i8*, ...)* @printf(i8* getelementptr( [4 x i8]* @print.str, i32 0, i32 0), i32 "<< temp-1<< ")" << endl; // temp-1 i tried yaptım
 	}
 
 	else if (line[0] == '}')
 	{
-		if (while_opened == 0)
+		if (if_opened == 1)
 		{
-			out_file << "\t" << "br label %whend" << endl << endl;
-		}
-		else if (while_opened == 1)
+
+		 	out_file << "\t" << "br label %"<<"end"<<conditioner << endl << endl;
+		 	if_opened--;
+		 	out_file << "end"<<conditioner<<":" << endl;
+		 	conditioner++;
+
+		}else if (while_opened == 1)//buranın manasını çözemedim tam
 		{
+			out_file << "\t" << "br label %whcond"<<conditioner << endl << endl;
 			while_opened--;
-			out_file << "\t" << "br label %whcond" << endl << endl;
+			out_file << "whend"<<conditioner<<":" << endl;
+			conditioner++;
+
+		}else{
+
+			out_file << "Line " << line_count << ": syntax error."; // eğer birden fazla while açılmışsa ard arda
+			exit(0);
+
 		}
-		out_file << "whend:" << endl;
+		
 	}
 	else if (line.size() == 0)
 	{
@@ -676,7 +787,18 @@ int main(int argc, char* argv[])
 		parser(all_lines[i]); // DUZELT
 		cout<<"line "<<line_count<< " parserı geçti"<<endl;
 		i++;
+		// if(while_opened<0){
+		// 	out_file << "Line " << line_count << ": syntax error.";
+		// 	exit(0);
+
+		// }
 		line_count++;
+	}
+
+	if(while_opened!=0){
+
+		out_file << "Line " << line_count << ": syntax error. Expected }.";
+		exit(0);
 	}
 
 	for (int i = 0; i < all_variables.size(); i++)
