@@ -92,7 +92,7 @@ void paranthesis_count(int i)
 	if (open != 0)
 	{
 		
-		out_file << "Line " << line_count << ": syntax error.";
+		out_file << "Line " << line_count << ": syntax error. x13";
 		exit(0);
 	}
 	open = 0;
@@ -111,7 +111,7 @@ void equal_sign_count(int i)
 	}
 	if (open > 1)
 	{
-		out_file << "Line " << line_count << ": syntax error.";
+		out_file << "Line " << line_count << ": syntax error. x12";
 		exit(0);
 	}
 }
@@ -119,14 +119,17 @@ void equal_sign_count(int i)
 void white_space_eraser(int i)
 {
         string line = all_lines[i];
+        cout<<"gelen line "<< line<<endl;
 		string temp = "";
-		for (int k = 0; k < line.size(); k++)
+		for (int k = 0; k < line.size(); k++) // line ı doğru silmiyor tabla boşluk konulursa
 		{
-			if (line[k] != ' ')
+			if (!(line[k] == ' ' ||line[k]=='\t'|| line[k]=='\n'||line[k] == '\r'||line[k] == '\v' || line[k] == '\f'))
+       
 			{
 				temp += line[k];
 			}
 		}
+		cout<<"çıkan line "<<temp<<endl;
 		all_lines[i] = temp;
 }
 
@@ -142,7 +145,7 @@ void while_if_checker(int i)
 			if (line.substr(length - 2, length) != "){" || line.find('=') != string::npos)
 			{
 				
-				out_file << "Line " << line_count << ": syntax error.";
+				out_file << "Line " << line_count << ": syntax error. x14";
 				exit(0);
 			}
 		}
@@ -172,7 +175,7 @@ void print_checker(int i)
 		if (line[line.size() - 1] != ')')
 		{
 
-			out_file << "Line " << line_count << ": syntax error.";
+			out_file << "Line " << line_count << ": syntax error. x15";
 			exit(0);
 		}
 	}
@@ -240,7 +243,7 @@ string assign_parser(string line)
 	}
 	else {
 
-		out_file << "Line " << line_count << ": syntax error.";
+		out_file << "Line " << line_count << ": syntax error. x16";
 		exit(0);
 
 	}
@@ -586,6 +589,7 @@ string par_op(string line)
 			if (!isRegistered) {
 
 				all_variables.push_back(line);
+				cout<<"variable "<< line<<endl;
 			}
 
 			return line;
@@ -612,7 +616,7 @@ void parser(string line)
 
 		if(if_opened!=0||while_opened!=1){
 
-			out_file << "Line " << line_count << ": syntax error.";
+			out_file << "Line " << line_count << ": syntax error. x17";
 		 	exit(0);
 		}
 		int length= line.length();
@@ -665,7 +669,7 @@ void parser(string line)
 		if_opened++;
 		if(if_opened!=1||while_opened!=0){
 
-			out_file << "Line " << line_count << ": syntax error.";
+			out_file << "Line " << line_count << ": syntax error. x18";
 		 	exit(0);
 		}
 		string tempp = line.substr(3, line.length()-5);
@@ -715,6 +719,8 @@ void parser(string line)
 	else if (line.substr(0, 6) == "print(")
 	{
 		string tempp = line.substr(6, line.length() - 7);
+
+		cout<<"printin içi "<< temp<<endl;
 		string tried = add_op(tempp);
         
         if(!is_number(tried))
@@ -761,8 +767,8 @@ void parser(string line)
 			conditioner++;
 
 		}else{
-
-			out_file << "Line " << line_count << ": syntax error."; // eğer birden fazla while açılmışsa ard arda
+ 
+			out_file << "Line " << line_count << ": syntax error. x19"; // eğer birden fazla while açılmışsa ard arda
 			exit(0);
 
 		}
@@ -774,7 +780,7 @@ void parser(string line)
 	else
 	{
 
-		out_file << "Line " << line_count << ": syntax error.";
+		out_file << "Line " << line_count << ": syntax error. x20";
 		exit(0);
 	}
 }
@@ -800,12 +806,16 @@ void syntax_checker(int i)
 void is_it_all_good(int i)
 {
     string line = all_lines[i];
-	for (int i = 0; i < line.size(); i++)
+    cout<<"gelen line "<< line<<"aaaa"<<endl;
+    cout<<"line size "<< line.size()<<endl;
+	for (int k = 0; k < line.size(); k++)
 	{
-		if (!(isalpha(line[i]) || isdigit(line[i]) || line[i] == '{' || line[i] == '}' || line[i] == '(' || line[i] == ')' || line[i] == '=' || line[i] == ',' || line[i] == '+'
-			|| line[i] == '-' || line[i] == '*' || line[i] == '/' ))
+		cout<<k<<endl;
+		cout<<line[k]<<endl;
+		if (!(isalpha(line[k]) || isdigit(line[k]) || line[k] == '{' || line[k] == '}' || line[k] == '(' || line[k] == ')' || line[k] == '=' || line[k] == ',' || line[k] == '+'
+			|| line[k] == '-' || line[k] == '*' || line[k] == '/' ))
 		{
-			out_file << "Line " << line_count << ": syntax error.";
+			out_file << "Line " << line_count << ": syntax error. x21";
 			exit(0);
 		}
 	}
@@ -828,9 +838,10 @@ int main(int argc, char* argv[])
 	{
 		
 		white_space_eraser(i);// DUZELT
-		cout<<all_lines[i]<<endl;
+		cout<<"boşluk silindikten sonra "<<all_lines[i]<<endl;
 		string line= all_lines[i];
 		comment_eraser(i);
+		cout<<"comment silindikten sonra "<<all_lines[i]<<endl;
 		syntax_checker(i); // DUZELT
 		parser(all_lines[i]); // DUZELT
 		i++;
@@ -838,7 +849,7 @@ int main(int argc, char* argv[])
 		line_count++;
 	}
 
-	if(while_opened!=0){
+	if(while_opened!=0||if_opened!=0){
 
 		out_file << "Line " << line_count << ": syntax error. Expected }.";
 		exit(0);
