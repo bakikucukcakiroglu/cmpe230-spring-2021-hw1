@@ -11,12 +11,13 @@ ifstream in_file_two;
 ofstream out_file;
 ofstream out_file_two;
 
-int syntax_line = -1;
 int line_count = 1;
 int while_opened = 0;
 int if_opened=0;
 int conditioner= 1;
+int conditioner1=1;
 int temp = 1;
+int choose_result=0;
 vector<string> all_variables;
 
 void print_module();
@@ -212,8 +213,10 @@ bool isValidVar(string var)
 	}
 	for (int i = 1; i < var.length(); i++)
 	{
-		if (isalnum(var[i]) == 0 || var[i] == ' ')
+		if (isalnum(var[i]) == 0 || var[i] == ' ') //boşluk neden var
 		{
+			
+			cout<<"bizi patlatan line "<< var<<endl;
 			out_file << "Line " << line_count << ": syntax error. x8";
 			exit(0);
 		}
@@ -278,8 +281,268 @@ string assign_parser(string line)
 	return a;
 }
 
+void choose_handler(string exp){
+
+	 int virgul=0;
+	 int par=1;
+	 for(int i=0; i<exp.size(); i++){
+
+
+		if(exp[i]=='('){
+
+			par++;
+		}
+		if(exp[i]==')'){
+
+			par--;
+		}
+	 	
+
+	 	if(exp[i]==','&&par==1){
+
+	 		virgul++;
+	 	}
+
+	 }
+
+	 if(virgul!=3){
+
+		out_file << "Line " << line_count << ": syntax error. x1";
+		exit(0);
+	 }
+	 int index[3];
+	 int a=0;
+	 par=1;
+	 for(int i=0; i<exp.size(); i++){
+	 	
+		if(exp[i]=='('){
+
+			par++;
+		}
+		if(exp[i]==')'){
+
+			par--;
+		}
+	 	
+	 	if(exp[i]==','&&par==1){
+
+
+	 		index[a]=i;
+	 		a++;
+	 	}
+
+	 }
+
+	 out_file << "\t" << "br label %"<<"entry"<<conditioner1 << endl << endl;
+	 out_file << "entry"<<conditioner1<<":" << endl;
+
+	 string tempp= exp.substr(0,index[0]);
+	 cout<<"handlerdeki ilk virgül "<< index[0]<<tempp<<endl;//!!!!
+	 string tried = add_op(tempp);
+	 
+	 if(!is_number(tried))
+        {
+            if(tried[0]!='%'){
+
+	            tried = "%" + tried;
+	            out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+	            temp++;
+	            out_file << "\t" << "%_" << temp <<"= icmp ne i32 %_"<< temp-1<<", 0 "<< endl;
+				temp++;
+				out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bnotzero"<<conditioner1<<", label %bzero"<<conditioner1 << endl << endl;
+
+				out_file << "bnotzero"<<conditioner1<<":" << endl;
+
+
+	            out_file << "\t" << "%_" << temp << "= load i32* " << tried<< endl;
+	            temp++;
+	            out_file << "\t" << "%_" << temp <<"= icmp sgt i32 %_"<< temp-1<<", 0 "<< endl;
+				temp++;
+				out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bpositive"<<conditioner1<<", label %bnegative"<<conditioner1 << endl << endl;
+
+				out_file << "bzero"<<conditioner1<<":" << endl;
+
+			}else{
+
+				out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+				temp++;
+				out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bnotzero"<<conditioner1<<", label %bzero"<<conditioner1 << endl << endl;
+
+				out_file << "bnotzero"<<conditioner1<<":" << endl;
+
+				out_file << "\t" << "%_" << temp <<"= icmp sgt i32 "<< tried<<", 0 "<< endl;
+				temp++;
+				out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bpositive"<<conditioner1<<", label %bnegative"<<conditioner1 << endl << endl;
+
+				out_file << "bzero"<<conditioner1<<":" << endl;
+
+       			}
+	
+        
+       	}else{
+
+        	out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bnotzero"<<conditioner1<<", label %bzero"<<conditioner1 << endl << endl;
+			out_file << "bnotzero"<<conditioner1<<":" << endl;
+
+			out_file << "\t" << "%_" << temp <<"= icmp sgt i32 "<< tried<<", 0 "<< endl;
+			temp++;
+			out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bpositive"<<conditioner1<<", label %bnegative"<<conditioner1 << endl << endl;
+			out_file << "bzero"<<conditioner1<<":" << endl;
+
+       	}		
+       			cout<< "handlerdeki zero "<<exp.substr(index[0]+1, index[1]-index[0]-1)<<endl;
+
+				string zero= add_op(exp.substr(index[0]+1, index[1]-index[0]-1));
+
+
+			
+				if(zero[0]!='%'&&!is_number(zero)){
+					zero = "%" + zero;
+					out_file << "\t" << "%_" << temp << "= load i32* " << zero<< endl;
+	          		temp++;
+					out_file << "\t" << "store i32 %_"<<temp-1<< ", i32* %"<<"chooseresult"<<choose_result << endl;
+				}else{
+
+					out_file << "\t" << "store i32 " << zero << ", i32* %"<<"chooseresult"<<choose_result << endl;
+
+				}
+
+				out_file << "\t" << "br label %bend"<<conditioner1<<endl << endl;
+
+				out_file << "bpositive"<<conditioner1<<":" << endl;
+
+				string pos= add_op(exp.substr(index[1]+1, index[2]-index[1]-1));
+
+				if(pos[0]!='%'&&!is_number(pos)){
+					pos = "%" + pos;
+					out_file << "\t" << "%_" << temp << "= load i32* " << pos<< endl;
+	          		temp++;
+					out_file << "\t" << "store i32 %_"<<temp-1 << ", i32* %"<<"chooseresult"<<choose_result << endl;
+				}else{
+
+					out_file << "\t" << "store i32 " << pos << ", i32* %"<<"chooseresult"<<choose_result << endl;
+
+				}
+				out_file << "\t" << "br label %bend"<<conditioner1<<endl << endl;
+
+				out_file << "bnegative"<<conditioner1<<":" << endl;
+
+				string neg= add_op(exp.substr(index[2]+1, exp.size()-index[2]-1));
+
+				if(neg[0]!='%'&&!is_number(neg)){
+					neg = "%" + neg;
+					out_file << "\t" << "%_" << temp << "= load i32* " << neg<< endl;
+	          		temp++;
+					out_file << "\t" << "store i32 %_"<<temp-1<< ", i32* %"<<"chooseresult"<<choose_result << endl;
+				}else{
+
+					out_file << "\t" << "store i32 " << neg << ", i32* %"<<"chooseresult"<<choose_result << endl;
+
+				}
+				out_file << "\t" << "br label %bend"<<conditioner1<<endl << endl;
+
+				out_file << "bend"<<conditioner1<<":" << endl;
+
+
+
+
+   //     		}else{
+
+			// 	out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			// 	temp++;
+			// 	out_file << "\t" << "br i1 %_"<< temp-1 <<", label %bnotzero"<<conditioner<<", label %bzero"<<conditioner << endl << endl;
+
+			// 	out_file << "btrue"<<conditioner<<":" << endl;
+
+   //     		}
+	
+        
+   //      }else{
+
+   //      	out_file << "\t" << "%_" << temp <<"= icmp ne i32 "<< tried<<", 0 "<< endl;
+			// temp++;
+			// out_file << "\t" << "br i1 %_"<< temp-1 <<", label %btrue"<<conditioner<<", label %"<<"end"<<conditioner << endl << endl;
+			// out_file << "btrue"<<conditioner<<":" << endl;
+
+
+   //      }
+
+        conditioner1++;
+
+
+}
+
+string choose_finder(string line){
+
+	// if(line.find("choose(") == string::npos){
+
+	// 	cout<<"BURAYA GİRDİ VE LİNE: "<<line<<endl;
+
+	// 	return line;
+	// }
+
+	// cout<<"BURAYA GİRMEDİ VE LİNE: "<<line<<endl;
+
+	while(line.find("choose(") != string::npos){
+
+
+	for(int i=line.size()-7; i>= 0; i--){
+
+		if(line.substr(i, 7)=="choose("){
+
+			cout<< "chose buldum "<<endl;
+
+			int par_count=1;
+
+			for(int j=i+7; j< line.size(); j++){
+
+				if(line[j]=='('){
+
+					par_count++;
+				}
+				if(line[j]==')'){
+
+					par_count--;
+				}
+				if(par_count==0){
+					
+					cout<< "HANDLERE GİDEN LİNE "<<line.substr(i+7, j-i-7)<<endl;
+
+					choose_handler(line.substr(i+7, j-i-7));//!!!!
+					
+					line= line.substr(0,i)+ "chooseresult"+to_string(choose_result)+ line.substr(j+1, line.size()-j-1);
+
+					cout<<"CHOSE FINDER :"<<line<<endl;
+					 //!!!!!!!!!
+					choose_result++;
+					//return choose_finder(line);
+					break;
+					
+				}
+
+			}
+			break;
+
+		}
+	}
+	}
+
+	return line;
+
+
+}
+
 string add_op(string line)
-{
+{	
+
+	if(line.find("choose(") != string::npos){
+
+		line = choose_finder(line);
+	}
+	
+
 
 	int op_index = -1;
 	int par = 0;
@@ -555,7 +818,7 @@ string div_op(string line)
 string par_op(string line)
 {
 
-	if (line[0] == '(' && line[line.size() == ')']) 
+	if (line[0] == '(' && line[line.size()-1] ==')') 
 	{
 
 		if(line.substr(1, line.size()-2).size()==0){ // boş parantezler için
@@ -874,7 +1137,7 @@ int main(int argc, char* argv[])
 	{
 		out_file_two << line_two << endl;
 	}
-
+	out_file_two << endl;
 	out_file_two << "\t" << "ret i32 0" << endl;
 	out_file_two << "}";
 
