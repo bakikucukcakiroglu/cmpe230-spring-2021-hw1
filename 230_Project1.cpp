@@ -13,7 +13,7 @@ using namespace std;
 /* ----- GLOBAL VARIABLES -----*/
 
 // Records current line for printing syntax errors.
-int line_count = 1;
+int line_count = 0;
 // It helps to check whether line has while loop or not.
 int while_opened = 0;
 // It helps to check whether line has 'if' or not.
@@ -69,8 +69,8 @@ string mul_op(string line);
 string div_op(string line);
 string par_op(string line);
 void parser(string line);
-void choose_handler(string exp)
-string choose_finder(string line)
+void choose_handler(string exp);
+string choose_finder(string line);
 
 
 
@@ -96,7 +96,6 @@ void take_all_lines()
 	string line;
 	while (getline(in_file, line)) // While there is a line...
 	{
-		cout << line << endl;
 		all_lines.push_back(line); // Keep going to push back into all_lines vector.
 	}
 }
@@ -120,15 +119,16 @@ bool is_number(string s)
 
 	return true;
 }
-void syntax_error_handler(){
 
-	
+void syntax_error_handler()
+{
+
 	out_file_two << "; ModuleID = 'mylang2ir'" << endl;
 	out_file_two << "declare i32 @printf(i8*, ...)" << endl; // declare i32 @printf(i8*, ...)
 	out_file_two << "@print.str = constant [23 x i8] c\"Line %d: syntax error\\0A\\00\""<< endl;
 	out_file_two << endl;
 	out_file_two << "define i32 @main() {" << endl;
-	out_file_two << "call i32 (i8, ...)* @printf(i8* getelementptr ([23 x i8]* @print.str, i32 0, i32 0), i32 "<<line_count<<")";
+	out_file_two << "call i32 (i8*, ...)* @printf(i8* getelementptr ([23 x i8]* @print.str, i32 0, i32 0), i32 "<<line_count<<")";
 	out_file_two << endl;
 	out_file_two << "\t" << "ret i32 0" << endl;
 	out_file_two << "}";
@@ -162,7 +162,6 @@ void paranthesis_count(int i)
 	if (open != 0)
 	{
 		syntax_error_handler();
-
 	}
 	open = 0;
 }
@@ -243,7 +242,7 @@ void while_if_checker(int i)
 			}
 		}
 	}
-
+}
 
 /**
 * Decides given line of the print statement is syntactically okay. If not then prints syntax error.
@@ -845,7 +844,7 @@ void parser(string line)
 
 		if (if_opened != 1 || while_opened != 0) 
 		{
-			osyntax_error_handler();
+			syntax_error_handler();
 		}
 
 		string tempp = line.substr(3, line.length() - 5);
@@ -1036,7 +1035,6 @@ void choose_handler(string exp)
 			out_file << "bzero" << conditioner1 << ":" << endl;
 
 		}
-
 
 	}
 	else
