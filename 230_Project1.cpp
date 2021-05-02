@@ -1,4 +1,4 @@
-﻿/*
+/*
 Writers: H & M
 Student Number(s): 2018400141 - 2018400156
 */
@@ -9,7 +9,7 @@ Student Number(s): 2018400141 - 2018400156
 #include <algorithm>
 #include <vector>
 using namespace std;
-
+ 
 /* ----- GLOBAL VARIABLES -----*/
 
 // Records current line for printing syntax errors.
@@ -120,9 +120,6 @@ bool is_number(string s)
 	return true;
 }
 
-/**
-* Prints syntax error message on .ll file.
-*/
 void syntax_error_handler()
 {
 
@@ -1154,9 +1151,13 @@ string choose_finder(string line)
 int main(int argc, char* argv[])
 {
 	string file_name = argv[1]; // Open input and output files.
+	
+	string a= argv[1];
+	a=a.substr(0, a.size()-3);
+	a=a+"ll";
 	in_file.open(file_name);
 	out_file.open("file.txt");
-	out_file_two.open("file1.ll");
+	out_file_two.open(a);
 	in_file_two.open("file.txt");
 
 	take_all_lines(); // Take all lines of the given code and push back into a global vector named all_lines.
@@ -1177,7 +1178,18 @@ int main(int argc, char* argv[])
 
 	if (while_opened != 0 || if_opened != 0)
 	{
-		syntax_error_handler();
+		out_file_two << "; ModuleID = 'mylang2ir'" << endl;
+		out_file_two << "declare i32 @printf(i8*, ...)" << endl; // declare i32 @printf(i8*, ...)
+		out_file_two << "@print.str = constant [23 x i8] c\"Line %d: syntax error\\0A\\00\""<< endl;
+		out_file_two << endl;
+		out_file_two << "define i32 @main() {" << endl;
+		out_file_two << "call i32 (i8*, ...)* @printf(i8* getelementptr ([23 x i8]* @print.str, i32 0, i32 0), i32 "<<line_count-1<<")";
+		out_file_two << endl;
+		out_file_two << "\t" << "ret i32 0" << endl;
+		out_file_two << "}";
+	
+		remove("file.txt");
+		exit(0);
 	}
 
 	print_module(); // Print the first lines of the LLVM code.
