@@ -120,6 +120,9 @@ bool is_number(string s)
 	return true;
 }
 
+/**
+* Prints syntax error message on .ll file.
+*/
 void syntax_error_handler()
 {
 
