@@ -108,6 +108,11 @@ void take_all_lines()
 */
 bool is_number(string s)
 {
+	
+	if(s.size()==0)
+	{
+		return false;
+	}
 	for (int i = 0; i < s.size(); i++) {
 
 		if (!(s[i] <= 57 && s[i] >= 48)) { // Checks if chars of the string are number by looking ASCII interval for numbers.
@@ -293,6 +298,10 @@ bool isValidVar(string var)
 	}
 	if (isalpha(var[0]) == 0) // If first index is a number then print syntax error.
 	{
+		syntax_error_handler();
+	}
+	if(var=="if"||var=="while"){
+
 		syntax_error_handler();
 	}
 	for (int i = 1; i < var.length(); i++) // Checks every char of the string var is syntactically correct.
@@ -992,7 +1001,9 @@ void choose_handler(string exp)
 	out_file << "\t" << "br label %" << "entry" << conditioner1 << endl << endl;
 	out_file << "entry" << conditioner1 << ":" << endl;
 
-	string tempp = exp.substr(0, index[0]);
+	string tempp = exp.substr(0, index[0]);   
+		cout<<temp<<endl;
+
 	string tried = add_op(tempp);
 
 	if (!is_number(tried))
@@ -1053,6 +1064,7 @@ void choose_handler(string exp)
 	}
 
 	string zero = add_op(exp.substr(index[0] + 1, index[1] - index[0] - 1));
+	cout<<zero<<endl;
 
 	if (zero[0] != '%' && !is_number(zero))
 	{
@@ -1073,6 +1085,8 @@ void choose_handler(string exp)
 	out_file << "bpositive" << conditioner1 << ":" << endl;
 
 	string pos = add_op(exp.substr(index[1] + 1, index[2] - index[1] - 1));
+		cout<<exp.substr(index[1] + 1, index[2] - index[1] - 1)<<endl;
+
 
 	if (pos[0] != '%' && !is_number(pos))
 	{
@@ -1090,6 +1104,8 @@ void choose_handler(string exp)
 	out_file << "bnegative" << conditioner1 << ":" << endl;
 
 	string neg = add_op(exp.substr(index[2] + 1, exp.size() - index[2] - 1));
+		cout<<neg<<endl;
+
 
 	if (neg[0] != '%' && !is_number(neg))
 	{
@@ -1153,7 +1169,7 @@ int main(int argc, char* argv[])
 	string file_name = argv[1]; // Open input and output files.
 	
 	string a= argv[1];
-	a=a.substr(0, a.size()-3);
+	a=a.substr(0, a.size()-2);
 	a=a+"ll";
 	in_file.open(file_name);
 	out_file.open("file.txt");
